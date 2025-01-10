@@ -342,14 +342,14 @@ const filter = async (req, res) => {
       {
         $project: {
           mainAtmosphere: {
-              $filter: {
-                 input: "$mainAtmosphere",
-                 as: "data",
-                 cond: { $gt: [ "$$data", 1 ] },
-                },
-              },
-        }
-     }
+            $filter: {
+              input: "$mainAtmosphere",
+              as: "data",
+              cond: { $gt: ["$$data", 1] },
+            },
+          },
+        },
+      },
       // {
       //   $project: {
       //     orderFromSun: {
@@ -365,6 +365,68 @@ const filter = async (req, res) => {
       //     },
       //   },
       // },
+    ];
+    const data = await db.collection("planets").aggregate(pipeline).toArray();
+    res.status(200).json(data);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const redact = async (req, res) => {
+  try {
+    const db = await connectDB();
+    const pipeline = [
+      {
+        $match: {
+          surfaceTemperatureC: { $gt: ["$surfaceTemperatureC.mean", 10] },
+        },
+      },
+      {
+        $redact: {
+          $cond: {
+            if: {
+              $gt: ["$orderFromSun", 0],
+            },
+            then: "$$DESCEND",
+            else: "$$PRUNE",
+          },
+        },
+      },
+    ];
+    const data = await db.collection("planets").aggregate(pipeline).toArray();
+    res.status(200).json(data);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const replaceRoot = async (req, res) => {
+  try {
+    const db = await connectDB();
+    const pipeline = [
+      {
+        $match: { "surfaceTemperatureC.mean": { $exists: true } },
+      },
+      {
+        $replaceRoot: {
+          newRoot: {
+            $mergeObjects: [
+              {
+                min: { $ifNull: ["$surfaceTemperatureC.min", 0] },
+                max: { $ifNull: ["$surfaceTemperatureC.max", 0] },
+                mean: { $ifNull: ["$surfaceTemperatureC.mean", 0] },
+              },
+              { surfaceTemperatureC: "$surfaceTemperatureC" },
+            ],
+          },
+        },
+      },
+      {
+        $project: {
+          surfaceTemperatureC: 0,
+        },
+      },
     ];
     const data = await db.collection("planets").aggregate(pipeline).toArray();
     res.status(200).json(data);
@@ -401,4 +463,6 @@ module.exports = {
   addField,
   cond,
   filter,
+  redact,
+  replaceRoot,
 };
