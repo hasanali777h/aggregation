@@ -1,10 +1,16 @@
-const connectDB = require("./db");
+"use strict";
+const { getDB } = require("./db");
+
+let db;
+setTimeout(() => {
+  db = getDB();
+  console.log('db instance connected...');
+}, 3000);
 
 const getAll = async (req, res) => {
   try {
-    const db = await connectDB(); // Wait for the database connection
-    const data = await db.collection("users").find().limit(1).toArray();
-    res.status(200).json(data);
+    const data = await db.collection("planets").find().limit(1).toArray();
+    return await res.status(200).json(data);
   } catch (error) {
     res.status(500).json({ message: error.message });
     console.error(error);
@@ -13,7 +19,6 @@ const getAll = async (req, res) => {
 
 const lookup = async (req, res) => {
   try {
-    const db = await connectDB(); // Wait for the database connection
     const pipeline = [
       {
         $lookup: {
@@ -32,7 +37,11 @@ const lookup = async (req, res) => {
         },
       },
     ];
-    const data = await db.collection("movies").aggregate(pipeline).limit(10).toArray();
+    const data = await db
+      .collection("movies")
+      .aggregate(pipeline)
+      .limit(10)
+      .toArray();
     const found = data.filter((element) => element.show_comments.length > 0);
     res.status(200).json(found);
   } catch (error) {
@@ -43,7 +52,6 @@ const lookup = async (req, res) => {
 
 const match = async (req, res) => {
   try {
-    const db = await connectDB();
     const pipeline = [
       {
         $match: {
@@ -66,7 +74,6 @@ const match = async (req, res) => {
 
 const unwind = async (req, res) => {
   try {
-    const db = await connectDB();
     const pipeline = [
       {
         $unwind: {
@@ -85,7 +92,6 @@ const unwind = async (req, res) => {
 
 const and = async (req, res) => {
   try {
-    const db = await connectDB();
     const data = await db
       .collection("planets")
       .find({
@@ -100,7 +106,6 @@ const and = async (req, res) => {
 
 const or = async (req, res) => {
   try {
-    const db = await connectDB();
     const data = await db
       .collection("planets")
       .find({
@@ -115,7 +120,6 @@ const or = async (req, res) => {
 
 const exp = async (req, res) => {
   try {
-    const db = await connectDB();
     const pipeline = [
       {
         $match: {
@@ -135,7 +139,6 @@ const exp = async (req, res) => {
 
 const $in = async (req, res) => {
   try {
-    const db = await connectDB();
     const pipeline = [
       {
         $match: {
@@ -155,7 +158,6 @@ const $in = async (req, res) => {
 
 const ne = async (req, res) => {
   try {
-    const db = await connectDB();
     const pipeline = [
       {
         $project: {
@@ -178,7 +180,6 @@ const ne = async (req, res) => {
 
 const not = async (req, res) => {
   try {
-    const db = await connectDB();
     const pipeline = [
       {
         $project: {
@@ -201,7 +202,6 @@ const not = async (req, res) => {
 
 const push = async (req, res) => {
   try {
-    const db = await connectDB();
     const pipeline = [
       {
         $sort: {
@@ -226,7 +226,6 @@ const push = async (req, res) => {
 
 const map = async (req, res) => {
   try {
-    const db = await connectDB();
     const pipeline = [
       {
         $project: {
@@ -252,7 +251,6 @@ const map = async (req, res) => {
 
 const count = async (req, res) => {
   try {
-    const db = await connectDB();
     const pipeline = [
       {
         $group: {
@@ -272,7 +270,6 @@ const count = async (req, res) => {
 
 const addField = async (req, res) => {
   try {
-    const db = await connectDB();
     const pipeline = [
       {
         $addFields: {
@@ -312,7 +309,6 @@ const addField = async (req, res) => {
 
 const cond = async (req, res) => {
   try {
-    const db = await connectDB();
     const pipeline = [
       {
         $project: {
@@ -337,7 +333,6 @@ const cond = async (req, res) => {
 
 const filter = async (req, res) => {
   try {
-    const db = await connectDB();
     const pipeline = [
       {
         $project: {
@@ -375,7 +370,6 @@ const filter = async (req, res) => {
 
 const redact = async (req, res) => {
   try {
-    const db = await connectDB();
     const pipeline = [
       {
         $match: {
@@ -403,7 +397,6 @@ const redact = async (req, res) => {
 
 const replaceRoot = async (req, res) => {
   try {
-    const db = await connectDB();
     const pipeline = [
       {
         $match: { "surfaceTemperatureC.mean": { $exists: true } },
@@ -437,7 +430,6 @@ const replaceRoot = async (req, res) => {
 
 // const func = async(req,res)=>{
 //   try {
-//     const db = await connectDB();
 //     const pipeline = [];
 //     const data = await db.collection('planets').aggregate(pipeline).toArray();
 //     res.status(200).json(data);
